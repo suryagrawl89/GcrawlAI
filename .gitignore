@@ -1,2 +1,24 @@
 config.yaml
-venv
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual env
+venv/
+.venv/
+
+# Playwright / Crawlers
+playwright/.cache/
+browser_data/
+downloads/
+
+# Logs & temp
+*.log
+tmp/
+.cache/
+
+# OS
+.DS_Store
+Thumbs.db
