@@ -159,4 +159,4 @@ A Chennai-based IT services company specializing in AI/ML solutions, web and mob
 
 If you find GcrawlAI useful, please consider giving us a star on GitHub!
 
-[![GitHub stars](https://img.shields.io/github/stars/gramosoft/gcrawlai.svg?style=social&label=Star)](https://github.com/gramosoft/gcrawlai)
+[![GitHub stars](https://img.shields.io/github/stars/gramosoft/gcrawlai.svg?style=social&label=Star)](https://github.com/GramosoftAI/gcrawlai)
