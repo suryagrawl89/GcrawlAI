@@ -71,10 +71,14 @@ def main(
         websocket_manager=websocket_manager,
         crawl_mode=crawl_mode
     )
+
+    if crawl_mode == "single":
+        summary["markdown_path"] = summary["markdown_file"]
+    else:
+        summary["markdown_path"] = str(crawl_dir)
     
     # Add crawl metadata to summary
     summary["crawl_id"] = crawl_id
-    summary["markdown_path"] = str(crawl_dir)
     
     return summary
 

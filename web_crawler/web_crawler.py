@@ -85,6 +85,8 @@ class WebCrawler:
             )
 
             elapsed = perf_counter() - start_perf
+            
+            file_name = result["markdown_file"] if crawl_mode == "single" else "None"
 
             summary = {
                 "start_url": start_url,
@@ -93,6 +95,8 @@ class WebCrawler:
                 "total_links_found": len(result.get("links", [])) if result else 0,
                 "started_at": start_time.strftime("%Y-%m-%d %H:%M:%S %Z"),
                 "time_taken": f"{int(elapsed//60)}m {int(elapsed%60)}s",
+                "crawl_mode": crawl_mode,
+                "markdown_file": file_name,
             }
 
             with open(self.config.summary_file, "w", encoding="utf-8") as f:

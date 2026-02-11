@@ -3,10 +3,15 @@ Individual page crawling logic
 """
 
 import logging
+import asyncio
+import sys
 from typing import Optional, Dict
 from pathlib import Path
 from playwright.sync_api import sync_playwright, Page
 from bs4 import BeautifulSoup
+
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 from web_crawler.config import CrawlConfig
 from web_crawler.file_manager import FileManager
@@ -46,8 +51,7 @@ class PageCrawler:
         
         try:
             # Scroll to load dynamic content
-            page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-            page.wait_for_timeout(2000)
+            self.scroll_to_bottom(page)
             
             html = page.content()
             soup = BeautifulSoup(html, "lxml")
@@ -157,7 +161,7 @@ class PageCrawler:
                 
                 page.route("**/*", self.browser_utils.block_resources)
                 
-                response = page.goto(url, wait_until="networkidle", timeout=60_0000)
+                response = page.goto(url, wait_until="domcontentloaded", timeout=60_0000)
                 
                 if not response or response.status != 200:
                     raise Exception(f"HTTP {response.status if response else 'None'}")
@@ -205,7 +209,7 @@ class PageCrawler:
                 context = browser.new_context()
                 page = context.new_page()
                 
-                response = page.goto(url, wait_until="networkidle", timeout=60_0000)
+                response = page.goto(url, wait_until="domcontentloaded", timeout=60_0000)
                 
                 page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
                 page.wait_for_timeout(4000)
@@ -264,3 +268,20 @@ class PageCrawler:
             logger.error(f"All browsers failed for: {url}")
         
         return result
+
+    def scroll_to_bottom(self, page, max_scrolls=10, wait_time=2000):
+        """
+        Scroll page until no new content loads
+        """
+        last_height = page.evaluate("document.body.scrollHeight")
+
+        for _ in range(max_scrolls):
+            page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+            page.wait_for_timeout(wait_time)
+
+            new_height = page.evaluate("document.body.scrollHeight")
+
+            if new_height == last_height:
+                break
+
+            last_height = new_height

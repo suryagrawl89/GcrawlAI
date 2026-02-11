@@ -25,30 +25,25 @@ if "rendered_files" not in st.session_state:
 
 # ================= WEBSOCKET THREAD =================
 
-
-def load_existing_markdown(crawl_id: str):
-    base_dir = Path("web_crawler/crawl_output-api")
-    crawl_dir = next(base_dir.glob(f"*{crawl_id}"), None)
-
-    if not crawl_dir or not crawl_dir.exists():
-        return []
-
-    return sorted(crawl_dir.glob("*.md"))
-
-
 def websocket_listener(crawl_id: str, message_queue: queue.Queue):
     def on_message(ws, message):
+        print("📩 WS MESSAGE:", message)
+
         try:
             data = json.loads(message)
             message_queue.put(data)
         except Exception as e:
-            print("WS parse error:", e)
+            print("❌ WS parse error:", e)
 
     def on_error(ws, error):
-        print("WebSocket error:", error)
+        # Ignore normal close (code 1000)
+        if "opcode=8" in str(error) or "1000" in str(error):
+            print("🔌 WebSocket closed normally")
+        else:
+            print("❌ WebSocket error:", error)
 
-    def on_close(ws, *args):
-        print("WebSocket closed")
+    def on_close(ws, close_status_code, close_msg):
+        print(f"🔌 WebSocket closed (code={close_status_code})")
 
     ws = WebSocketApp(
         f"{WS_BASE}/ws/crawl/{crawl_id}",
@@ -61,7 +56,7 @@ def websocket_listener(crawl_id: str, message_queue: queue.Queue):
 
 # ================= UI =================
 
-st.title("🕷️ Live Web Crawler")
+st.title("🕷️ Live Web Crawler (Markdown Streaming)")
 
 with st.form("crawl_form"):
     url = st.text_input("Website URL", placeholder="https://example.com")
@@ -86,22 +81,6 @@ if submitted:
 
             st.success(f"Crawl started (ID: {st.session_state.crawl_id})")
 
-            # 🔥 NOW crawl_id exists
-            st.info("Loading already generated pages...")
-
-            for md_file in load_existing_markdown(st.session_state.crawl_id):
-                render_resp = requests.get(
-                    f"{API_BASE}/crawl/render",
-                    params={"file_path": str(md_file)},
-                    timeout=30,
-                )
-                if render_resp.status_code == 200:
-                    st.components.v1.html(
-                        render_resp.text,
-                        height=600,
-                        scrolling=True,
-                    )
-
             # Start WebSocket listener
             ws_thread = threading.Thread(
                 target=websocket_listener,
@@ -110,13 +89,10 @@ if submitted:
             )
             ws_thread.start()
 
-
-# ================= LIVE RENDER =================
+# ================= LIVE MARKDOWN RENDER =================
 
 st.markdown("---")
-st.subheader("📄 Generated Pages")
-
-placeholder = st.empty()
+st.subheader("📄 Generated Pages (Markdown)")
 
 # Pull messages from WS queue
 while not st.session_state.messages.empty():
@@ -131,27 +107,28 @@ while not st.session_state.messages.empty():
 
         st.session_state.rendered_files.add(file_path)
 
-        # Fetch rendered HTML
-        render_resp = requests.get(
-            f"{API_BASE}/crawl/render",
+        # 🔥 FETCH RAW MARKDOWN
+        md_resp = requests.get(
+            f"{API_BASE}/crawl/markdown",
             params={"file_path": file_path},
             timeout=300,
         )
 
-        if render_resp.status_code == 200:
+        if md_resp.status_code == 200:
+            markdown_text = md_resp.text
+
             with st.container():
                 st.markdown(
                     f"### Page {msg.get('page')} – {msg.get('url')}"
                 )
-                st.components.v1.html(
-                    render_resp.text,
-                    height=600,
-                    scrolling=True,
-                )
+                st.markdown(markdown_text)
+
+        else:
+            st.error(f"Failed to load markdown: {file_path}")
 
     elif msg.get("type") == "crawl_completed":
         st.success("✅ Crawl completed")
 
-# Small sleep to allow Streamlit refresh loop
+# Allow Streamlit refresh loop
 time.sleep(0.3)
 st.rerun()

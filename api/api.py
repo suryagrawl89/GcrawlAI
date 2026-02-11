@@ -2,6 +2,8 @@ from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import HTMLResponse
+from fastapi.responses import PlainTextResponse
+from fastapi.responses import JSONResponse
 
 from pydantic import BaseModel, EmailStr, HttpUrl, field_validator
 from typing import Literal, Optional
@@ -222,6 +224,36 @@ def render_markdown(file_path: str):
     html = markdown.markdown(content, extensions=["fenced_code", "tables", "toc"])
 
     return HTMLResponse(content=html)
+
+@app.get("/crawl/markdown")
+def get_markdown(file_path: str):
+    """
+    Return markdown content + metadata as JSON
+    """
+
+    try:
+        md_path = Path(file_path).resolve()
+
+        if not md_path.exists() or not md_path.is_file():
+            raise HTTPException(status_code=404, detail="Markdown file not found")
+
+        base_dir = Path("web_crawler/crawl_output-api").resolve()
+        if base_dir not in md_path.parents:
+            raise HTTPException(status_code=403, detail="Invalid file path")
+
+        content = md_path.read_text(encoding="utf-8")
+
+        return JSONResponse(
+            content={
+                "markdown": content
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Markdown read error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to read markdown file")
 
 
 
