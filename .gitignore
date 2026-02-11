@@ -13,7 +13,7 @@ venv/
 playwright/.cache/
 browser_data/
 downloads/
-crawl_output-api/
+web_crawler/crawl_output-api/
 
 # Logs & temp
 *.log
