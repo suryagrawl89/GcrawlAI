@@ -1,148 +1,113 @@
-# Web Crawler API & Dashboard
+# Flight Price Intelligence (Standalone)
 
-A comprehensive web crawling solution featuring a FastAPI backend, Streamlit dashboard, and distributed task processing with Celery and Redis.
+An independent, production-ready React + TypeScript + Vite project focused exclusively on real-time flight price intelligence, competitor benchmark analytics, proximity window comparisons (1–10 hours), and multi-carrier fare tracking.
 
-## 🚀 Features
+---
 
-- **Dual Mode Crawling**:
-  - **Single Page**: Direct, real-time crawling of individual pages.
-  - **Full Site**: Distributed crawling of entire websites using Celery workers.
-- **Advanced Extraction**:
-  - Markdown conversion for LLM consumption.
-  - HTML & Screenshot capture.
-  - SEO metadata extraction (Title, Description, Keywords).
-- **Stealth & Anti-Blocking**:
-  - Uses Playwright with stealth plugins to bypass bot detection.
-  - Automatic fallback strategies (Chromium -> Firefox/Camoufox).
-- **Real-time Updates**:
-  - Live progress tracking via WebSockets.
-  - Interactive Streamlit dashboard.
-- **Authentication**:
-  - JWT-based authentication.
-  - Email OTP for signup/verification.
-  - Password reset flow.
+## ✈️ Key Features
 
-## 🛠️ Technology Stack
+- **Real-Time Fare Extraction**: Powered by Google Flights live integration (`POST /api/v1/google-flights`) with support for one-way and full flight schedules.
+- **Airport Autocomplete**: Fast, debounced IATA/ICAO code lookups via `FreeAirportDB` with curated fallback of major global hubs.
+- **Dynamic Proximity Window (1–10 Hours)**: Flexible departure window selector to compare flights departing ±1h to ±10h relative to your target flight.
+- **Interactive 7-Day Date Picker Strip**: Easy date switching with one-click fare comparison across consecutive travel dates.
+- **Competitor Benchmark Breakdown**:
+  - Automatically identifies Cheaper, Same, and More Expensive competitor flights.
+  - Computes minimum, maximum, and average price spreads.
+  - Highlights optimal pricing positioning and saving opportunities.
+- **Multi-Filter & Sorting Dashboard**:
+  - Filter by Stops (Non-stop, 1 stop, 2+ stops).
+  - Filter by Operating Carriers (IndiGo, Air India, Emirates, Singapore Airlines, etc.).
+  - Sort by Price (Low to High), Duration, Departure Time, or Arrival Time.
+- **Modern Responsive Design**: Dark-mode aesthetic with custom glassmorphism, responsive cards, and mobile-friendly navigation.
+- **Self-Contained Architecture**: Operates independently without any extraneous web-scraping or admin modules.
 
-- **Backend**: FastAPI, Python 3.9+
-- **Frontend**: Streamlit
-- **Database**: PostgreSQL
-- **Task Queue**: Celery + Redis
-- **Browser Automation**: Playwright
-- **Authentication**: JWT, BCrypt
+---
 
-## 📋 Prerequisites
+## 📁 Project Structure
 
-- **Python 3.9+**
-- **PostgreSQL** (running on default port 5432)
-- **Redis** (running on default port 6379)
-- **Git**
+```text
+flightpriceintelligenceduplicate/
+├── index.html                           # App entry HTML template
+├── package.json                         # Dependencies & scripts
+├── tsconfig.json                        # TypeScript configuration
+├── vite.config.ts                       # Vite bundler configuration
+├── src/
+│   ├── main.tsx                         # React 19 application entry point
+│   ├── App.tsx                          # Client-side router & toast notifications
+│   ├── index.css                        # Tailwind CSS imports & global resets
+│   ├── vite-env.d.ts                    # Vite client types
+│   ├── components/
+│   │   ├── common/
+│   │   │   ├── AirportSelectInput.tsx   # Debounced airport search component
+│   │   │   └── SEO.tsx                  # Dynamic SEO tags & JSON-LD metadata
+│   │   ├── layout/
+│   │   │   ├── Navbar.tsx               # Dedicated header navigation
+│   │   │   └── Footer.tsx               # Footer with corridor links & tech details
+│   │   └── ErrorBoundary.tsx            # Graceful crash handling boundary
+│   ├── page/
+│   │   ├── FlightPriceIntelligence.tsx  # Core intelligence dashboard & analytics
+│   │   └── FlightPriceIntelligence.css  # Full component styling (~2100 lines)
+│   ├── services/
+│   │   ├── apiConfig.ts                 # Base API config & fallback URL resolution
+│   │   └── flightApi.ts                 # Typed Axios client for Google Flights endpoint
+│   └── utils/
+│       └── airportApi.ts                # FreeAirportDB client & curated global hubs
+```
 
-## ⚙️ Installation
+---
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/GramosoftAI/GcrawlAI.git
-   cd GcrawlAI
-   ```
+## 🚀 Quickstart
 
-2. **Create and activate virtual environment**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # Linux/Mac
-   venv\Scripts\activate     # Windows
-   ```
+### 1. Prerequisites
+- **Node.js**: `v18.0.0` or higher
+- **npm** or **pnpm** or **yarn**
 
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+### 2. Installation
+Navigate into the `flightpriceintelligenceduplicate` folder and install dependencies:
 
-4. **Install Playwright browsers**
-   ```bash
-   playwright install
-   ```
-
-## 🔧 Configuration
-
-1. **Database Config**: Update `config.yaml` with your PostgreSQL credentials.
-   ```yaml
-   postgres:
-     host: "localhost"
-     port: 5432
-     database: "crawlerdb"
-     user: "postgres"
-     password: "your_password"
-   ```
-
-2. **Initialize Database Tables**:
-   ```bash
-   python -m api.db_setup
-   # OR
-   python api/db_setup.py
-   ```
-
-## �‍♂️ Running the Application
-
-You need to run 4 separate processes. It's recommended to use separate terminal windows.
-
-**1. Start Redis Server** (if not running as a service)
 ```bash
-redis-server
+cd flightpriceintelligenceduplicate
+npm install
 ```
-Note: Redis server will not run on windows, so use WSL for running redis server. or use docker.
 
-**2. Start Celery Worker**
+### 3. Run Development Server
+Start the Vite local development server:
+
 ```bash
-# Linux (User Recommended)
-celery -A web_crawler.celery_config worker -l info
-
-# Windows
-celery -A web_crawler.celery_config.celery_app worker --loglevel=info --pool=solo
+npm run dev
 ```
 
-**3. Start Backend API**
+The application will be accessible at `http://localhost:5174/` (or next available port).
+
+### 4. Build for Production
+Create an optimized production bundle:
+
 ```bash
-# Windows / Development
-uvicorn api.api:app --reload --port 8000
-
-# Linux / Production (User Recommended)
-uvicorn api.api:app --host 0.0.0.0 --port 8000 --workers 4 --timeout-keep-alive 120
+npm run build
 ```
-API Docs will be available at: http://localhost:8000/docs
 
-**4. Start Frontend Dashboard**
+The compiled files will be output to the `dist/` directory.
+
+### 5. Preview Production Build
 ```bash
-cd web_crawler
-streamlit run streamlit_app.py
-```
-Dashboard will be available at: http://localhost:8501
-
-## � Project Structure
-
-```
-.
-├── api/                    # FastAPI backend
-│   ├── api.py              # Main API entry point
-│   ├── auth_manager.py     # Authentication logic
-│   └── db_setup.py         # Database initialization
-├── web_crawler/            # Crawler logic
-│   ├── web_crawler.py      # Core crawler orchestrator
-│   ├── page_crawler.py     # Individual page processing
-│   ├── streamlit_app.py    # Frontend dashboard
-│   └── celery_config.py    # Celery configuration
-├── config.yaml             # Application configuration
-└── requirements.txt        # Python dependencies
+npm run preview
 ```
 
-## 🔐 API Endpoints
+---
 
-- `POST /crawler`: Start a new crawl job (single or all).
-- `GET /crawler/status/{task_id}`: Check Celery task status.
-- `GET /crawl/markdown`: Retrieve generated markdown.
-- `POST /auth/signup/send-otp`: reliable email-based signup.
-- `POST /auth/signup/verify-otp`: reliable email-based signup.
-- `POST /auth/signin`: reliable email-based signin.
-- `POST /auth/forgot-password`: reliable email-based forgot password.
-- `POST /auth/reset-password`: reliable email-based reset password.
+## ⚙️ Configuration & Environment Variables
 
+By default, the application connects to the live production endpoint at `https://gcrawlai.com/gc/api/v1`.
+
+To customize the backend endpoint, create a `.env` file in the project root:
+
+```env
+VITE_API_BASE_URL=https://gcrawlai.com/gc/api/v1
+```
+
+---
+
+## 🛡️ License & Credits
+
+Built as an independent module based on the GcrawlAI Flight Price Intelligence feature.
+All airport lookup data is powered by [FreeAirportDB](https://freeairportdb.com).

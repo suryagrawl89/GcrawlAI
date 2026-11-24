@@ -1,27 +1,5 @@
-config.yaml
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-
 # Virtual env
 venv/
 .venv/
 env/
 .env/
-
-# Playwright / Crawlers
-playwright/.cache/
-browser_data/
-downloads/
-web_crawler/crawl_output-api/
-
-# Logs & temp
-*.log
-tmp/
-.cache/
-
-# OS
-.DS_Store
-Thumbs.db
